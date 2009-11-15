@@ -4,7 +4,7 @@
 #include <string.h>
 
 /*
- * Basic tree implementation supporting fast insertion and deletion
+ * basic tree implementation supporting fast insertion and deletion
  * Every child points to its immediate parent, previous and next sibling
  * Parents also have a pointer to their first child
  * Sibling relationships form a circularly linked list
@@ -34,33 +34,65 @@ create_tree (char* name) {
 }
 
 /*
+ * insert a given node under a target node
+ * as a child of the target. If target node
+ * already has children the node is added at
+ * the end.
+ */
+int
+insert_node_under (Node* node, Node* targetparent) {
+
+    Node* lastchild = (Node *) NULL;
+
+    node->parent = targetparent;
+
+    if (!targetparent->firstchild) { 
+        targetparent->firstchild = node;
+        node->nextsibling = node->prevsibling = node;
+    } else {
+        lastchild = targetparent->firstchild->prevsibling;
+
+        lastchild->nextsibling = node;
+        node->prevsibling = lastchild;
+
+        node->nextsibling = targetparent->firstchild;
+        targetparent->firstchild->prevsibling = node;
+    }
+
+    return 1;
+}
+
+/*
  * creates and returns poiner to a child under a given node
  */
 Node*
-create_child_under (Node* node, char* name) {
+create_node_under (Node* node, char* name) {
 
-    Node* lastchild = (Node *) NULL;
     Node* newchild = (Node*) malloc(sizeof(Node));
-
     newchild->name = strdup(name);
-    newchild->parent = node;
     newchild->firstchild = (Node *) NULL;
-
-    // add the new child to the "end" of circularly linked list of children
-    if (!node->firstchild) { 
-        node->firstchild = newchild;
-        newchild->nextsibling = newchild->prevsibling = newchild;
-    } else {
-        lastchild = node->firstchild->prevsibling;
-
-        lastchild->nextsibling = newchild;
-        newchild->prevsibling = lastchild;
-
-        newchild->nextsibling = node->firstchild;
-        node->firstchild->prevsibling = newchild;
-    }
+    insert_node_under (newchild, node);
 
     return newchild;
+}
+
+/*
+ * insert a given node next to a target node
+ * as a sibling of the target.
+ */
+int
+insert_node_next_to (Node* node, Node* targetsibling) {
+
+    Node* next = targetsibling->nextsibling;
+    node->parent = targetsibling->parent;
+
+    // take care of sibling links
+    targetsibling->nextsibling = node;
+    next->prevsibling = node;
+    node->nextsibling = next;
+    node->prevsibling = targetsibling;
+
+    return 1;
 }
 
 /*
@@ -68,20 +100,12 @@ create_child_under (Node* node, char* name) {
  * returning pointer to the newly created sibling
  */
 Node*
-create_sibling_next_to (Node* node, char* name) {
+create_node_next_to (Node* node, char* name) {
+
     Node* newsibling = (Node*) malloc(sizeof(Node));
-    Node* next = node->nextsibling;
-
     newsibling->name = strdup(name);
-    newsibling->parent = node->parent;
     newsibling->firstchild = (Node *) NULL;
-
-    // take care of sibling links
-    node->nextsibling = newsibling;
-    next->prevsibling = newsibling;
-
-    newsibling->nextsibling = next;
-    newsibling->prevsibling = node;
+    insert_node_next_to (newsibling, node);
 
     return newsibling;
 }
@@ -111,6 +135,34 @@ traverse_node (Node* node, int indent) {
             traverse_node (next, indent + 1);
         } 
     }
+}
+
+/*
+ * move a given node next to a target node
+ * as a sibling of the target
+ *
+ * Assumes the root node is not being moved.
+ */
+int
+move_node_next_to (Node* node, Node* targetsibling) {
+    remove_node (node);
+    insert_node_next_to (node, targetsibling);
+
+    return 1;
+}
+
+/*
+ * move a given node next to a target node
+ * as a child of the target
+ *
+ * Assumes the root node is not being moved.
+ */
+int
+move_node_under (Node* node, Node* targetparent) {
+    remove_node (node);
+    insert_node_under (node, targetparent);
+
+    return 1;
 }
 
 /*
@@ -199,26 +251,27 @@ int
 main (int argc, char **argv) {
 
     Node* root    = create_tree            ( "/");
-    Node* home    = create_child_under     ( root, "home");
-    Node* chillu  = create_child_under     ( home, "chillu");
-    Node* code    = create_child_under     ( chillu, "code");
-    Node* sandbox = create_sibling_next_to ( code, "sandbox");
-    Node* blum    = create_sibling_next_to ( code, "blum");
-    Node* shub    = create_sibling_next_to ( code, "shub");
-    Node* foo     = create_sibling_next_to ( blum, "foo");
-    Node* bin     = create_child_under     ( root, "bin");
-    Node* boot    = create_child_under     ( root, "boot");
-    Node* dev     = create_child_under     ( root, "dev");
-    Node* usr     = create_child_under     ( root, "usr");
+    Node* home    = create_node_under     ( root, "home");
+    Node* chillu  = create_node_under     ( home, "chillu");
+    Node* code    = create_node_under     ( chillu, "code");
+    Node* sandbox = create_node_next_to ( code, "sandbox");
+    Node* blum    = create_node_next_to ( code, "blum");
+    Node* shub    = create_node_next_to ( code, "shub");
+    Node* foo     = create_node_next_to ( blum, "foo");
+    Node* bin     = create_node_under     ( root, "bin");
+    Node* boot    = create_node_under     ( root, "boot");
+    Node* dev     = create_node_under     ( root, "dev");
+    Node* usr     = create_node_under     ( root, "usr");
 
     traverse_node (root, 0);
     printf ("\n");
 
-    delete_node ( code    , 0);
-    delete_node ( bin     , 0);
-    delete_node ( sandbox , 0);
-    delete_node ( usr     , 0);
-    delete_node ( home    , 0);
+    move_node_under (chillu, dev);
+
+    traverse_node (root, 0);
+    printf ("\n");
+
+    delete_node ( dev     , 0);
 
     traverse_node (root, 0);
     printf ("\n");
