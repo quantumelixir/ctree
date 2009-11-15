@@ -8,6 +8,7 @@
  * Every child points to its immediate parent, previous and next sibling
  * Parents also have a pointer to their first child
  * Sibling relationships form a circularly linked list
+ *
  * TODO: XOR-Linking?
  */
 struct Node {
@@ -21,7 +22,7 @@ struct Node {
 typedef struct Node Node;
 
 /*
- * create empty root node
+ * creates and returns pointer to an empty root node
  * root nodes cannot have siblings
  */
 Node*
@@ -33,7 +34,7 @@ create_tree (char* name) {
 }
 
 /*
- * create a child under a given node
+ * creates and returns poiner to a child under a given node
  */
 Node*
 create_child_under (Node* node, char* name) {
@@ -51,8 +52,10 @@ create_child_under (Node* node, char* name) {
         newchild->nextsibling = newchild->prevsibling = newchild;
     } else {
         lastchild = node->firstchild->prevsibling;
+
         lastchild->nextsibling = newchild;
         newchild->prevsibling = lastchild;
+
         newchild->nextsibling = node->firstchild;
         node->firstchild->prevsibling = newchild;
     }
@@ -61,7 +64,8 @@ create_child_under (Node* node, char* name) {
 }
 
 /*
- * create and insert a sibling node next to a given node
+ * creates and inserts a sibling node next to a given node
+ * returning pointer to the newly created sibling
  */
 Node*
 create_sibling_next_to (Node* node, char* name) {
@@ -110,46 +114,23 @@ traverse_node (Node* node, int indent) {
 }
 
 /*
- * recursively delete all the children under a given node
- * maintaining the nextsibling relationships of the node
- * Returns 1 for success, 0 for failure
- * TODO: Currently always returns 1 => Do error checking.
+ * remove (but don't delete) the node, preserving
+ * silbing and parent-child relationships
+ *
+ * NOTE: Assumes that node is not root
+ * It doesn't make sense to "remove" root
+ * from a tree as root _is_ the tree
  */
 int
-delete_node (Node* node, int raw) {
-
-    Node* start = node->firstchild;
-    Node* curr  = start;
-
-    char* name = strdup(node->name);
-
-    printf ("Beginning to delete the children of -%s-\n", name);
-
-    // first delete all children of the node
-    if (start) { // if the node has any children
-        while ((curr = curr->nextsibling) != start) {
-            delete_node (curr->prevsibling, 1);
-        }
-    }
-
-    printf ("Finished deleting children of -%s-\n", name);
-
-    
-    // if deletion is raw then don't bother maintaining
-    // the prev/next sibling relationships as these nodes
-    // will anyway be deleted later. (i.e. part of a
-    // larger recursive deletion)
-    // raw is 0 only for the toplevel
-    if (!raw) {
-        // splice the node out of the list of
-        // children of which the node is a part 
-        Node* prev = node->prevsibling;
-        Node* next = node->nextsibling;
-        if (node != next) { 
-            // has at least one other sibling
-            prev->nextsibling = next;
-            next->prevsibling = prev;
-        }
+remove_node (Node* node) {
+    // remove the node out of the list of
+    // children of which the node is a part 
+    Node* prev = node->prevsibling;
+    Node* next = node->nextsibling;
+    if (node != next) { 
+        // has at least one other sibling
+        prev->nextsibling = next;
+        next->prevsibling = prev;
     }
 
     // if the node is not root then you have to
@@ -165,13 +146,51 @@ delete_node (Node* node, int raw) {
         }
     }
 
-    printf ("Finished splicing node of -%s-\n", name);
+    return 1;
+}
+
+/*
+ * recursively delete all the children under a given node
+ * maintaining the nextsibling relationships of the node
+ * Returns 1 for success, 0 for failure
+ *
+ * TODO: Currently always returns 1 => Do error checking.
+ */
+int
+delete_node (Node* node, int raw) {
+
+    Node* start = node->firstchild;
+    Node* curr  = (Node *) NULL;
+
+    // if deletion is raw then don't bother maintaining
+    // the prev/next sibling relationships as these nodes
+    // will anyway be deleted later. (i.e. part of a
+    // larger recursive deletion)
+    // raw is 0 only for the toplevel invocation of delete_node
+    if (!raw && node->parent) {
+        remove_node (node);
+    }
+
+    // first delete all children of the node
+    if (start) {
+        // only one child
+        if (start == start->nextsibling) { 
+            delete_node (start, 1);
+        }
+        // more than one child
+        else {
+            curr = start->nextsibling;
+            while (start != curr) {
+                curr = curr->nextsibling;
+                delete_node (curr->prevsibling, 1);
+            }
+            delete_node (start, 1);
+        }
+    }
 
     // delete the node itself
     free (node->name);
     free (node);
-
-    printf ("Finished deleting node -%s-\n", name);
 
     return 1;
 }
@@ -179,31 +198,30 @@ delete_node (Node* node, int raw) {
 int
 main (int argc, char **argv) {
 
-    Node* root = create_tree ("/");
-    create_child_under (root, "home");
-    create_child_under (root->firstchild, "chillu");
-    create_child_under (root->firstchild->firstchild, "code");
-    create_sibling_next_to (root->firstchild->firstchild->firstchild, "sandbox");
-    create_child_under (root, "bin");
-    create_child_under (root, "boot");
-    create_child_under (root, "dev");
-    create_child_under (root, "usr");
+    Node* root    = create_tree            ( "/");
+    Node* home    = create_child_under     ( root, "home");
+    Node* chillu  = create_child_under     ( home, "chillu");
+    Node* code    = create_child_under     ( chillu, "code");
+    Node* sandbox = create_sibling_next_to ( code, "sandbox");
+    Node* blum    = create_sibling_next_to ( code, "blum");
+    Node* shub    = create_sibling_next_to ( code, "shub");
+    Node* foo     = create_sibling_next_to ( blum, "foo");
+    Node* bin     = create_child_under     ( root, "bin");
+    Node* boot    = create_child_under     ( root, "boot");
+    Node* dev     = create_child_under     ( root, "dev");
+    Node* usr     = create_child_under     ( root, "usr");
 
     traverse_node (root, 0);
+    printf ("\n");
 
-    delete_node (root->firstchild->firstchild, 0);
-    /*
-     *delete_node (root->firstchild, 0);
-     */
-    /*
-     *delete_node (root, 0);
-     */
+    delete_node ( code    , 0);
+    delete_node ( bin     , 0);
+    delete_node ( sandbox , 0);
+    delete_node ( usr     , 0);
+    delete_node ( home    , 0);
 
     traverse_node (root, 0);
-    delete_node (root->firstchild, 0);
-    traverse_node (root, 0);
-    delete_node (root->firstchild->nextsibling->nextsibling, 0);
-    traverse_node (root, 0);
+    printf ("\n");
 
     return 0;
 }
