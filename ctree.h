@@ -1,3 +1,13 @@
+/*
+ * ctree -- generic tree implementation with nodes capable of having
+ * arbitrary number of children and siblings stored in a circularly linked
+ * list for fast insertion/deletion/moving
+ *
+ * chillu
+ * Date: Sunday November, 15 2009
+ * Time: 10:18:44 PM IST 
+ */
+
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
@@ -13,7 +23,7 @@
 
 typedef struct Node Node;
 struct Node {
-    char* name;
+    void* data;
     Node* parent;
     Node* prevsibling;
     Node* nextsibling;
@@ -25,9 +35,10 @@ struct Node {
  * root nodes cannot have siblings
  */
 Node*
-create_tree (char* name) {
-     Node* root = (Node*) malloc(sizeof(Node));
-     root->name = strdup (name);
+create_tree (void* data, unsigned int n) {
+     Node* root = (Node *) malloc(sizeof(Node));
+     root->data = (void *) malloc(n);
+     memcpy (root->data, data, n);
      root->parent = root->prevsibling = root->nextsibling = root->firstchild = (Node *) NULL;
      return root;
 }
@@ -65,10 +76,12 @@ insert_node_under (Node* node, Node* targetparent) {
  * creates and returns poiner to a child under a given node
  */
 Node*
-create_node_under (Node* node, char* name) {
+create_node_under (Node* node, void* data, unsigned int n) {
 
-    Node* newchild = (Node*) malloc(sizeof(Node));
-    newchild->name = strdup(name);
+    Node* newchild = (Node *) malloc(sizeof(Node));
+    newchild->data = (void *) malloc(n);
+    memcpy(newchild->data, data, n);
+
     newchild->firstchild = (Node *) NULL;
     insert_node_under (newchild, node);
 
@@ -99,10 +112,12 @@ insert_node_next_to (Node* node, Node* targetsibling) {
  * returning pointer to the newly created sibling
  */
 Node*
-create_node_next_to (Node* node, char* name) {
+create_node_next_to (Node* node, void* data, unsigned int n) {
 
-    Node* newsibling = (Node*) malloc(sizeof(Node));
-    newsibling->name = strdup(name);
+    Node* newsibling = (Node *) malloc(sizeof(Node));
+    newsibling->data = (void *) malloc(n);
+    memcpy(newsibling->data, data, n);
+
     newsibling->firstchild = (Node *) NULL;
     insert_node_next_to (newsibling, node);
 
@@ -111,53 +126,25 @@ create_node_next_to (Node* node, char* name) {
 
 /*
  * traverse recursively all the nodes under the given node
- * indent specifies the print-indentation of the current node
- * TODO: Fancier printing instead of just indent-levels
+ * depth specifies the recursive-depth of the current node
+ * callback function is called on each node
  */
 void
-traverse_node (Node* node, int indent) {
+traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth)) {
     Node *start, *next;
     start = next = node->firstchild;
-    int i;
 
-    // print the current node's name with appropriate indentation
-    for ( i = 0; i < indent; ++i ) {
-        printf ("%c", ' ');
-    }
-    printf ("%s\n", node->name);
+    // call printing function
+    print_data (node->data, depth);
 
     // if the node has a child
     if (start) {
-        traverse_node (next, indent + 1);
+        traverse_node (next, depth + 1, print_data);
         // recurse without going round in circles
         while ((next = next->nextsibling) != start) {
-            traverse_node (next, indent + 1);
+            traverse_node (next, depth + 1, print_data);
         } 
     }
-}
-
-/*
- * move a given node next to a target node
- * as a sibling of the target
- * Does not check if the target is actually
- * a child of the given node (in which case
- * the results are undefined)
- */
-int
-move_node_next_to (Node* node, Node* targetsibling) {
-    return remove_node (node) && insert_node_next_to (node, targetsibling);
-}
-
-/*
- * move a given node next to a target node
- * as a child of the target
- * Does not check if the target is actually
- * a child of the given node (in which case
- * the results are undefined)
- */
-int
-move_node_under (Node* node, Node* targetparent) {
-    return remove_node (node) && insert_node_under (node, targetparent);
 }
 
 /*
@@ -236,9 +223,32 @@ delete_node (Node* node, int raw) {
     }
 
     // delete the node itself
-    free (node->name);
+    free (node->data);
     free (node);
 
     return 1;
 }
 
+/*
+ * move a given node next to a target node
+ * as a sibling of the target
+ * Does not check if the target is actually
+ * a child of the given node (in which case
+ * the results are undefined)
+ */
+int
+move_node_next_to (Node* node, Node* targetsibling) {
+    return remove_node (node) && insert_node_next_to (node, targetsibling);
+}
+
+/*
+ * move a given node next to a target node
+ * as a child of the target
+ * Does not check if the target is actually
+ * a child of the given node (in which case
+ * the results are undefined)
+ */
+int
+move_node_under (Node* node, Node* targetparent) {
+    return remove_node (node) && insert_node_under (node, targetparent);
+}
