@@ -16,7 +16,7 @@ create_tree_from_file (FILE* infile) {
     char* str;
     int i;
 
-    if (!infile) { 
+    if (!infile) {
         printf ("fatal: could not open file\n");
         exit(1);
     }
@@ -30,7 +30,7 @@ create_tree_from_file (FILE* infile) {
         str = buffer + i;
         /*printf ("|%s| %d %p\n", str, i, buffer);*/
 
-        if (i > prevdepth) { 
+        if (i > prevdepth) {
             prev = create_node_under (prev ? prev : root, str, strlen(str) + 1);
             prevdepth++;
         } else if (i == prevdepth) {
@@ -44,15 +44,29 @@ create_tree_from_file (FILE* infile) {
     return root;
 }
 
+/*
+ * tree style printing for string data
+ */
 void
-print_string (void* data, int indent) {
+print_string (void* data, int indent, int islastchild, unsigned int* bitmask) {
     int i;
+
     // print the current node's data with appropriate indentation
-    for ( i = 1; i < indent; ++i ) {
-        printf ("%c", '.');
+    for (i = 1; i < indent; ++i) {
+        // use bitmasks to suppress printing unnecessary branches
+        if (!(*bitmask & (1 << indent))) {
+            printf ("|   ");
+        }
+        else
+            printf ("    ");
+    }
+    if (indent) {
+        if (islastchild)
+            printf ("`-- ");
+        else
+            printf ("|-- ");
     }
     printf ("%s\n", (char *)data);
-
 }
 
 int
@@ -66,7 +80,7 @@ main (int argc, char **argv) {
      *delete_node (root, 0);
      */
 
-    Node* nroot    = create_tree        ( "/"    , strlen("/") + 1);
+    Node* nroot   = create_tree         ( "/"    , strlen("/") + 1);
     Node* home    = create_node_under   ( nroot  , "home"        , strlen("home") + 1);
     Node* chillu  = create_node_under   ( home   , "chillu"      , strlen("chillu") + 1);
     Node* code    = create_node_under   ( chillu , "code"        , strlen("code") + 1);
@@ -82,7 +96,7 @@ main (int argc, char **argv) {
     traverse_node (nroot, 0, print_string);
     printf ("\n");
 
-    move_node_under (foo, chillu);
+    move_node_under (foo, nroot);
 
     traverse_node (nroot, 0, print_string);
     printf ("\n");

@@ -127,15 +127,37 @@ create_node_next_to (Node* node, void* data, unsigned int n) {
 /*
  * traverse recursively all the nodes under the given node
  * depth specifies the recursive-depth of the current node
- * callback function is called on each node
+ * callback function is called with useful information like:
+ *
+ * data: The data stored in the node
+ * depth: Distance from the root node
+ * islastchild: Boolean is 0 if there are more siblings to this node
+ * bitmask: Flags for each depth level, with 0 indicating more
+ *          siblings are to come on that depth and 1 indicating
+ *          that all siblings on that level are past. Thus, it
+ *          starts out with all 0s.
+ *
+ *          NOTE: The bitmask is only 32 bits wide, so
+ *          depth information is available only from 0-31
  */
 void
-traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth)) {
+traverse_node (Node* node, int depth,
+        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
     Node *start, *next;
     start = next = node->firstchild;
+    static unsigned int bitmask = 0;
+    int islastchild = node->nextsibling == ((node->parent) ? node->parent->firstchild : NULL);
+
+    // If a new traversal reset bitmask
+    if (!depth)
+        bitmask = 0;
 
     // call printing function
-    print_data (node->data, depth);
+    print_data (node->data, depth, islastchild, &bitmask);
+
+    // update bitmask if lastchild is past
+    if (islastchild)
+        bitmask ^= (1 << depth);
 
     // if the node has a child
     if (start) {
