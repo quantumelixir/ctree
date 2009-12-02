@@ -5,12 +5,13 @@
  *
  * chillu
  * Date: Sunday November, 15 2009
- * Time: 10:18:44 PM IST 
+ * Time: 10:18:44 PM IST
  */
 
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 
 /*
  * basic tree implementation supporting fast insertion and deletion
@@ -23,7 +24,11 @@
 
 typedef struct Node Node;
 struct Node {
+    // data
     void* data;
+    unsigned int size;
+
+    // links
     Node* parent;
     Node* prevsibling;
     Node* nextsibling;
@@ -38,6 +43,7 @@ Node*
 create_tree (void* data, unsigned int n) {
      Node* root = (Node *) malloc(sizeof(Node));
      root->data = (void *) malloc(n);
+     root->size = n;
      memcpy (root->data, data, n);
      root->parent = root->prevsibling = root->nextsibling = root->firstchild = (Node *) NULL;
      return root;
@@ -56,7 +62,7 @@ insert_node_under (Node* node, Node* targetparent) {
 
     node->parent = targetparent;
 
-    if (!targetparent->firstchild) { 
+    if (!targetparent->firstchild) {
         targetparent->firstchild = node;
         node->nextsibling = node->prevsibling = node;
     } else {
@@ -80,6 +86,7 @@ create_node_under (Node* node, void* data, unsigned int n) {
 
     Node* newchild = (Node *) malloc(sizeof(Node));
     newchild->data = (void *) malloc(n);
+    newchild->size = n;
     memcpy(newchild->data, data, n);
 
     newchild->firstchild = (Node *) NULL;
@@ -116,6 +123,7 @@ create_node_next_to (Node* node, void* data, unsigned int n) {
 
     Node* newsibling = (Node *) malloc(sizeof(Node));
     newsibling->data = (void *) malloc(n);
+    newsibling->size = n;
     memcpy(newsibling->data, data, n);
 
     newsibling->firstchild = (Node *) NULL;
@@ -154,7 +162,7 @@ _traverse_node (Node* node, int depth,
         // recurse without going round in circles
         while ((next = next->nextsibling) != start) {
             _traverse_node (next, depth + 1, print_data);
-        } 
+        }
     }
 }
 
@@ -190,10 +198,10 @@ traverse_node (Node* node,
 int
 remove_node (Node* node) {
     // remove the node out of the list of
-    // children of which the node is a part 
+    // children of which the node is a part
     Node* prev = node->prevsibling;
     Node* next = node->nextsibling;
-    if (node != next) { 
+    if (node != next) {
         // has at least one other sibling
         prev->nextsibling = next;
         next->prevsibling = prev;
@@ -203,7 +211,7 @@ remove_node (Node* node) {
     // manage parent-child relationships
     if (node->parent) {
         // the only child is about to be deleted
-        if (node->nextsibling == node) { 
+        if (node->nextsibling == node) {
             node->parent->firstchild = (Node *) NULL;
         }
         // the first child of the parent is about to be deleted
@@ -215,7 +223,7 @@ remove_node (Node* node) {
     return 1;
 }
 
-/* 
+/*
  * Use delete_node. Not this.
  */
 int
@@ -236,7 +244,7 @@ _delete_node (Node* node, int raw) {
     // first delete all children of the node
     if (start) {
         // only one child
-        if (start == start->nextsibling) { 
+        if (start == start->nextsibling) {
             _delete_node (start, 1);
         }
         // more than one child
@@ -291,4 +299,78 @@ move_node_next_to (Node* node, Node* targetsibling) {
 int
 move_node_under (Node* node, Node* targetparent) {
     return remove_node (node) && insert_node_under (node, targetparent);
+}
+
+/*
+ * Returns a pointer to a new tree that is a
+ * recursive copy of the sub-tree under node
+ */
+Node* deep_copy(Node* node)
+{
+    Node* root = (Node *) create_tree (node->data, node->size);
+    Node *start, *next;
+    start = next = node->firstchild;
+
+    if (start) {
+        insert_node_under (deep_copy(start), root);
+        while ((next = next->nextsibling) != start) {
+            insert_node_under (deep_copy(next), root);
+        }
+    }
+
+    return root;
+}
+
+/* 
+ * Interpret the content pointed to by data
+ * as characters, printing them to fout
+ */
+void
+memprint (void* data, unsigned int n, FILE* fout) {
+    static char buffer[1024];
+    if (n >= 1024) { 
+        printf ("fatal: data exceeds size of buffer (1K)\n");
+        exit(1);
+    }
+    memcpy (buffer, data, n);
+    buffer[n] = '\0';
+    fprintf (fout, "%s", (char *) buffer);
+}
+
+void
+_serialize (Node* node, int depth, FILE* fout) {
+    Node *start, *next;
+    start = next = node->firstchild;
+
+    fprintf (fout, "%d:", depth);
+    memprint (node->data, node->size, fout);
+    fprintf(fout, "\n");
+
+    if (start) {
+        _serialize (start, depth + 1, fout);
+        while ((next = next->nextsibling) != start) {
+            _serialize (next, depth + 1, fout);
+        }
+    }
+}
+
+/*
+ * Serialize the content of the tree
+ * under node emitting output to fout
+ */
+void
+serialize (Node* node, FILE* fout) {
+    Node *start, *next;
+    start = next = node->firstchild;
+
+    fprintf (fout, "%d:", 0);
+    memprint (node->data, node->size, fout);
+    fprintf(fout, "\n");
+
+    if (start) {
+        _serialize (start, 1, fout);
+        while ((next = next->nextsibling) != start) {
+            _serialize (next, 1, fout);
+        }
+    }
 }

@@ -76,6 +76,7 @@ main (int argc, char **argv) {
     Node* chillu = nroot->firstchild->firstchild;
     Node* sandbox = chillu->firstchild->prevsibling;
     Node* foo = sandbox->prevsibling;
+    Node* copy = deep_copy (chillu);
 
     printf ("\nInit\n");
     traverse_node (nroot, print_string);
@@ -92,7 +93,12 @@ main (int argc, char **argv) {
     delete_node (chillu);
     traverse_node (nroot, print_string);
 
+    printf ("\nPrinting saved deep_copy of chillu\n");
     delete_node (nroot);
+    traverse_node (copy, print_string);
+
+    printf ("\nSerializing the content of chillu\n");
+    serialize(copy, stdout);
 
     return 0;
 }
