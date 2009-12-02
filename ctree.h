@@ -125,16 +125,16 @@ create_node_next_to (Node* node, void* data, unsigned int n) {
 }
 
 /*
- * _traverse_node does work behind the scene for traverse_node
+ * _traverse_node does work behind the scenes for traverse_node
  * you are not expected to call this function directly
  */
 void
 _traverse_node (Node* node, int depth,
-        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+        void (*print_data)(void* data, int depth, bool islastchild, unsigned int* bitmask)) {
     Node *start, *next;
     start = next = node->firstchild;
     static unsigned int bitmask = 0;
-    int islastchild = node->nextsibling == ((node->parent) ? node->parent->firstchild : NULL);
+    bool islastchild = node->nextsibling == ((node->parent) ? node->parent->firstchild : NULL);
 
     // If a new traversal reset bitmask
     if (!depth)
@@ -144,8 +144,9 @@ _traverse_node (Node* node, int depth,
     print_data (node->data, depth, islastchild, &bitmask);
 
     // update bitmask if lastchild is past
-    if (islastchild)
-        bitmask ^= (1 << depth);
+    if (islastchild) {
+        bitmask ^= (1 << (depth));
+    }
 
     // if the node has a child
     if (start) {
@@ -174,7 +175,7 @@ _traverse_node (Node* node, int depth,
  */
 void
 traverse_node (Node* node,
-        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+        void (*print_data)(void* data, int depth, bool islastchild, unsigned int* bitmask)) {
     _traverse_node(node, 0, print_data);
 }
 
@@ -214,15 +215,11 @@ remove_node (Node* node) {
     return 1;
 }
 
-/*
- * recursively delete all the children under a given node
- * maintaining the nextsibling relationships of the node
- * Returns 1 for success, 0 for failure
- *
- * TODO: Currently always returns 1 => Do error checking.
+/* 
+ * Use delete_node. Not this.
  */
 int
-delete_node (Node* node, int raw) {
+_delete_node (Node* node, int raw) {
 
     Node* start = node->firstchild;
     Node* curr  = (Node *) NULL;
@@ -231,7 +228,7 @@ delete_node (Node* node, int raw) {
     // the prev/next sibling relationships as these nodes
     // will anyway be deleted later. (i.e. part of a
     // larger recursive deletion)
-    // raw is 0 only for the toplevel invocation of delete_node
+    // raw is 0 only for the toplevel invocation of _delete_node
     if (!raw && node->parent) {
         remove_node (node);
     }
@@ -240,16 +237,16 @@ delete_node (Node* node, int raw) {
     if (start) {
         // only one child
         if (start == start->nextsibling) { 
-            delete_node (start, 1);
+            _delete_node (start, 1);
         }
         // more than one child
         else {
             curr = start->nextsibling;
             while (start != curr) {
                 curr = curr->nextsibling;
-                delete_node (curr->prevsibling, 1);
+                _delete_node (curr->prevsibling, 1);
             }
-            delete_node (start, 1);
+            _delete_node (start, 1);
         }
     }
 
@@ -258,6 +255,18 @@ delete_node (Node* node, int raw) {
     free (node);
 
     return 1;
+}
+
+/*
+ * recursively delete all the children under a given node
+ * maintaining the nextsibling relationships of the node
+ * Returns 1 for success, 0 for failure
+ *
+ * TODO: Currently always returns 1 => Do error checking.
+ */
+int
+delete_node (Node* node) {
+    return _delete_node(node, 0);
 }
 
 /*

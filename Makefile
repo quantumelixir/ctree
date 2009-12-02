@@ -1,2 +1,2 @@
-ctree : ctree.c ctree.h
-	gcc -Wall ctree.c -o ctree
+ctree : example.c ctree.h
+	gcc -Wall example.c -o ctree
