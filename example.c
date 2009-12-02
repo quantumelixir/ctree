@@ -12,7 +12,7 @@
  */
 Node*
 create_tree_from_file (FILE* infile) {
-    char buffer[1024];
+    static char buffer[1024];
     char* str;
     int i;
 
@@ -72,33 +72,35 @@ print_string (void* data, int indent, bool islastchild, unsigned int* bitmask) {
 int
 main (int argc, char **argv) {
 
-    Node* nroot = create_tree_from_file (stdin);
-    Node* chillu = nroot->firstchild->firstchild;
+    Node* root = create_tree_from_file (stdin);
+    Node* chillu = root->firstchild->firstchild;
     Node* sandbox = chillu->firstchild->prevsibling;
     Node* foo = sandbox->prevsibling;
     Node* copy = deep_copy (chillu);
 
     printf ("\nInit\n");
-    traverse_node (nroot, print_string);
+    traverse_node (root, print_string);
 
     printf ("\nMove sandbox under root\n");
-    move_node_under (sandbox, nroot);
-    traverse_node (nroot, print_string);
+    move_node_under (sandbox, root);
+    traverse_node (root, print_string);
 
     printf ("\nMove foo under chillu's parent\n");
     move_node_under (foo, chillu->parent);
-    traverse_node (nroot, print_string);
+    traverse_node (root, print_string);
+
+    /*
+     *printf ("\nUnserializing...\n");
+     *traverse_node (unserialize(stdin), print_string);
+     */
 
     printf ("\nDelete chillu\n");
     delete_node (chillu);
-    traverse_node (nroot, print_string);
+    traverse_node (root, print_string);
 
     printf ("\nPrinting saved deep_copy of chillu\n");
-    delete_node (nroot);
+    delete_node (root);
     traverse_node (copy, print_string);
-
-    printf ("\nSerializing the content of chillu\n");
-    serialize(copy, stdout);
 
     return 0;
 }

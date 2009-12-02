@@ -133,8 +133,7 @@ create_node_next_to (Node* node, void* data, unsigned int n) {
 }
 
 /*
- * _traverse_node does work behind the scenes for traverse_node
- * you are not expected to call this function directly
+ * Use traverse_node instead. Not this.
  */
 void
 _traverse_node (Node* node, int depth,
@@ -329,7 +328,7 @@ void
 memprint (void* data, unsigned int n, FILE* fout) {
     static char buffer[1024];
     if (n >= 1024) { 
-        printf ("fatal: data exceeds size of buffer (1K)\n");
+        printf ("memprint: data exceeds size of buffer (1K)\n");
         exit(1);
     }
     memcpy (buffer, data, n);
@@ -337,12 +336,15 @@ memprint (void* data, unsigned int n, FILE* fout) {
     fprintf (fout, "%s", (char *) buffer);
 }
 
+/*
+ * Use serialize instead. Not this.
+ */
 void
 _serialize (Node* node, int depth, FILE* fout) {
     Node *start, *next;
     start = next = node->firstchild;
 
-    fprintf (fout, "%d:", depth);
+    fprintf (fout, "%d:%d:", depth, node->size);
     memprint (node->data, node->size, fout);
     fprintf(fout, "\n");
 
@@ -360,17 +362,35 @@ _serialize (Node* node, int depth, FILE* fout) {
  */
 void
 serialize (Node* node, FILE* fout) {
-    Node *start, *next;
-    start = next = node->firstchild;
+    _serialize (node, 0, fout);
+}
 
-    fprintf (fout, "%d:", 0);
-    memprint (node->data, node->size, fout);
-    fprintf(fout, "\n");
+/*
+ * Unserialize the data from fin
+ */
+Node*
+unserialize (FILE* fin) {
+    Node *root, *current;
+    root = current = NULL;
+    static char line[1024], buffer[1024];
+    int curdepth = 0, length = 0;
 
-    if (start) {
-        _serialize (start, 1, fout);
-        while ((next = next->nextsibling) != start) {
-            _serialize (next, 1, fout);
+    while (fgets (line, sizeof(line), fin) != NULL) {
+        sscanf (line, "%d:%d:%s", &curdepth, &length, buffer);
+        if (!root) {
+            root = create_tree (buffer, length);
+        }
+        else {
+            current = root;
+            while (--curdepth) {
+                if (!current) { 
+                    printf ("unserialize: bad depth %d\n", curdepth);
+                }
+                current = current->firstchild;
+            }
+            create_node_under (current, buffer, length);
         }
     }
+
+    return root;
 }
