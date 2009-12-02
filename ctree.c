@@ -93,17 +93,17 @@ main (int argc, char **argv) {
     Node* dev     = create_node_under   ( foo    , "dev"         , strlen("dev") + 1);
     Node* usr     = create_node_under   ( foo    , "usr"         , strlen("usr") + 1);
 
-    traverse_node (nroot, 0, print_string);
+    traverse_node (nroot, print_string);
     printf ("\n");
 
     move_node_under (foo, nroot);
 
-    traverse_node (nroot, 0, print_string);
+    traverse_node (nroot, print_string);
     printf ("\n");
 
     delete_node (chillu, 0);
 
-    traverse_node (nroot, 0, print_string);
+    traverse_node (nroot, print_string);
     printf ("\n");
 
     delete_node (nroot, 0);

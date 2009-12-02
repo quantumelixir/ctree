@@ -125,23 +125,11 @@ create_node_next_to (Node* node, void* data, unsigned int n) {
 }
 
 /*
- * traverse recursively all the nodes under the given node
- * depth specifies the recursive-depth of the current node
- * callback function is called with useful information like:
- *
- * data: The data stored in the node
- * depth: Distance from the root node
- * islastchild: Boolean is 0 if there are more siblings to this node
- * bitmask: Flags for each depth level, with 0 indicating more
- *          siblings are to come on that depth and 1 indicating
- *          that all siblings on that level are past. Thus, it
- *          starts out with all 0s.
- *
- *          NOTE: The bitmask is only 32 bits wide, so
- *          depth information is available only from 0-31
+ * _traverse_node does work behind the scene for traverse_node
+ * you are not expected to call this function directly
  */
 void
-traverse_node (Node* node, int depth,
+_traverse_node (Node* node, int depth,
         void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
     Node *start, *next;
     start = next = node->firstchild;
@@ -161,12 +149,33 @@ traverse_node (Node* node, int depth,
 
     // if the node has a child
     if (start) {
-        traverse_node (next, depth + 1, print_data);
+        _traverse_node (next, depth + 1, print_data);
         // recurse without going round in circles
         while ((next = next->nextsibling) != start) {
-            traverse_node (next, depth + 1, print_data);
+            _traverse_node (next, depth + 1, print_data);
         } 
     }
+}
+
+/*
+ * traverse recursively all the nodes under the given node
+ * callback function is called with useful information like:
+ *
+ * data: The data stored in the node
+ * depth: Distance from the root node
+ * islastchild: Boolean is 0 if there are more siblings to this node
+ * bitmask: Flags for each depth level, with 0 indicating more
+ *          siblings are to come on that depth and 1 indicating
+ *          that all siblings on that level are past. Thus, it
+ *          starts out with all 0s.
+ *
+ *          NOTE: The bitmask is only 32 bits wide, so
+ *          depth information is available only from 0-31
+ */
+void
+traverse_node (Node* node,
+        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+    _traverse_node(node, 0, print_data);
 }
 
 /*
