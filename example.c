@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -48,7 +49,7 @@ create_tree_from_file (FILE* infile) {
  * tree style printing for string data
  */
 void
-print_string (void* data, int indent, bool islastchild, unsigned int* bitmask) {
+print_string (void* data, int indent, int islastchild, unsigned int* bitmask) {
     int i;
 
     // print the current node's data with appropriate indentation
@@ -72,35 +73,102 @@ print_string (void* data, int indent, bool islastchild, unsigned int* bitmask) {
 int
 main (int argc, char **argv) {
 
-    Node* root = create_tree_from_file (stdin);
-    Node* chillu = root->firstchild->firstchild;
-    Node* sandbox = chillu->firstchild->prevsibling;
-    Node* foo = sandbox->prevsibling;
-    Node* copy = deep_copy (chillu);
+    char ch;
 
-    printf ("\nInit\n");
-    traverse_node (root, print_string);
 
-    printf ("\nMove sandbox under root\n");
-    move_node_under (sandbox, root);
-    traverse_node (root, print_string);
+    initscr();
+    cbreak();
+    keypad(stdscr, TRUE);
+    noecho();
 
-    printf ("\nMove foo under chillu's parent\n");
-    move_node_under (foo, chillu->parent);
-    traverse_node (root, print_string);
+    while((ch = getch()) != KEY_F(1))
+	{
+        /*
+         * Support the following mappings:
+         * 
+         * Basic:
+         * u: undo --> will take time
+         * h: help
+         * q: quit
+         *
+         * Navigation:
+         * P: go to root
+         * p: go to parent
+         * K: go to first child
+         * J: go to last child
+         * <C-j>: go to next sibling
+         * <C-k>: go to prev sibling
+         *
+         * View Manipulation:
+         * <TAB>: Toggle open/close node
+         * c: change tree root to selected node
+         * u: move tree root up one level
+         * o: open & close node
+         * O: recursively open nodes
+         * x: close parent of node
+         * X: recursively close nodes
+         *
+         * Node Manipulation:
+         * e: edit the current node
+         *
+         * Tree Manipulation:
+         * d: delete node, moving child nodes one level up
+         * D: recursively delete node
+         * y: yank node
+         * Y: recursively yank node
+         * p: paste node as child of current node
+         * P: paste node as sibling of current node
+         */
 
-    /*
-     *printf ("\nUnserializing...\n");
-     *traverse_node (unserialize(stdin), print_string);
-     */
+        switch(ch)
+        {
+            case 'j' :
+                clear();
+                printw("Hello");
+                break;
+            case 'k' :
+                clear();
+                printw("World");
+                break;
+        }
+        refresh();
+	}
 
-    printf ("\nDelete chillu\n");
-    delete_node (chillu);
-    traverse_node (root, print_string);
-
-    printf ("\nPrinting saved deep_copy of chillu\n");
-    delete_node (root);
-    traverse_node (copy, print_string);
+	getch();
+	endwin();
 
     return 0;
 }
+
+/*
+ *    FILE* fin = fopen("test", "r");
+ *    Node* root = create_tree_from_file (fin);
+ *    Node* chillu = root->firstchild->firstchild;
+ *    Node* sandbox = chillu->firstchild->prevsibling;
+ *    Node* foo = sandbox->prevsibling;
+ *    Node* copy = deep_copy (chillu);
+ *
+ *    printf ("\nInit\n");
+ *    traverse_node (root, print_string);
+ *
+ *    printf ("\nMove sandbox under root\n");
+ *    move_node_under (sandbox, root);
+ *    traverse_node (root, print_string);
+ *
+ *    printf ("\nMove foo under chillu's parent\n");
+ *    move_node_under (foo, chillu->parent);
+ *    traverse_node (root, print_string);
+ *
+ *    printf ("\nUnserializing input...\n");
+ *    traverse_node (unserialize(stdin), print_string);
+ *
+ *    printf ("\nDelete chillu\n");
+ *    delete_node (chillu);
+ *    traverse_node (root, print_string);
+ *
+ *    printf ("\nPrinting the saved deep_copy of chillu\n");
+ *    delete_node (root);
+ *    traverse_node (copy, print_string);
+ *
+ *    fclose (fin);
+ */
