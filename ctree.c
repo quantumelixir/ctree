@@ -20,11 +20,9 @@
  * root nodes cannot have siblings
  */
 Node*
-create_tree (void* data, unsigned int n) {
+create_tree (void* data) {
      Node* root = (Node *) malloc(sizeof(Node));
-     root->data = (void *) malloc(n);
-     root->size = n;
-     memcpy (root->data, data, n);
+     root->data = data;
      root->parent = root->prevsibling = root->nextsibling = root->firstchild = (Node *) NULL;
      return root;
 }
@@ -62,12 +60,10 @@ insert_node_under (Node* node, Node* targetparent) {
  * creates and returns poiner to a child under a given node
  */
 Node*
-create_node_under (Node* node, void* data, unsigned int n) {
+create_node_under (Node* node, void* data) {
 
     Node* newchild = (Node *) malloc(sizeof(Node));
-    newchild->data = (void *) malloc(n);
-    newchild->size = n;
-    memcpy(newchild->data, data, n);
+    newchild->data = data;
 
     newchild->firstchild = (Node *) NULL;
     insert_node_under (newchild, node);
@@ -99,12 +95,10 @@ insert_node_next_to (Node* node, Node* targetsibling) {
  * returning pointer to the newly created sibling
  */
 Node*
-create_node_next_to (Node* node, void* data, unsigned int n) {
+create_node_next_to (Node* node, void* data) {
 
     Node* newsibling = (Node *) malloc(sizeof(Node));
-    newsibling->data = (void *) malloc(n);
-    newsibling->size = n;
-    memcpy(newsibling->data, data, n);
+    newsibling->data = data;
 
     newsibling->firstchild = (Node *) NULL;
     insert_node_next_to (newsibling, node);
@@ -238,7 +232,6 @@ _delete_node (Node* node, int raw) {
     }
 
     // delete the node itself
-    free (node->data);
     free (node);
 
     return 1;
@@ -283,17 +276,20 @@ move_node_under (Node* node, Node* targetparent) {
 /*
  * Returns a pointer to a new tree that is a
  * recursive copy of the sub-tree under node
+ *
+ * NOTE: The new tree will still point to the same
+ * set of pointers that the old tree pointed to
  */
-Node* deep_copy(Node* node)
+Node* shallow_copy (Node* node)
 {
-    Node* root = (Node *) create_tree (node->data, node->size);
+    Node* root = (Node *) create_tree (node->data);
     Node *start, *next;
     start = next = node->firstchild;
 
     if (start) {
-        insert_node_under (deep_copy(start), root);
+        insert_node_under (shallow_copy (start), root);
         while ((next = next->nextsibling) != start) {
-            insert_node_under (deep_copy(next), root);
+            insert_node_under (shallow_copy (next), root);
         }
     }
 
@@ -306,8 +302,8 @@ Node* deep_copy(Node* node)
  */
 void
 memprint (void* data, unsigned int n, FILE* fout) {
-    static char buffer[1024];
-    if (n >= 1024) { 
+    static char buffer[BSIZE];
+    if (n >= BSIZE) { 
         printf ("memprint: data exceeds size of buffer (1K)\n");
         exit(1);
     }
@@ -320,18 +316,18 @@ memprint (void* data, unsigned int n, FILE* fout) {
  * Use serialize instead. Not this.
  */
 void
-_serialize (Node* node, int depth, FILE* fout) {
+_serialize (Node* node, int depth, FILE* fout, unsigned int n) {
     Node *start, *next;
     start = next = node->firstchild;
 
-    fprintf (fout, "%d:%d:", depth, node->size);
-    memprint (node->data, node->size, fout);
+    fprintf (fout, "%d:%d:", depth, n);
+    memprint (node->data, n, fout);
     fprintf(fout, "\n");
 
     if (start) {
-        _serialize (start, depth + 1, fout);
+        _serialize (start, depth + 1, fout, n);
         while ((next = next->nextsibling) != start) {
-            _serialize (next, depth + 1, fout);
+            _serialize (next, depth + 1, fout, n);
         }
     }
 }
@@ -339,38 +335,54 @@ _serialize (Node* node, int depth, FILE* fout) {
 /*
  * Serialize the content of the tree
  * under node emitting output to fout
+ *
+ * NOTE: If (void *) data is a POD not containing other
+ * pointers then this will work. Otherwise when you
+ * unserialize the recreated (void *) data will point
+ * to arbitrary memory locations.
  */
 void
-serialize (Node* node, FILE* fout) {
-    _serialize (node, 0, fout);
+serialize (Node* node, FILE* fout, unsigned int size) {
+    _serialize (node, 0, fout, size);
 }
 
 /*
- * Unserialize the data from fin
+ * Unserialize the data from fin allocating memory for
+ * data as required, but free-ing of data is the responsibility
+ * of the client.
+ *
+ * Using line and buffer => Discard use of one
  */
-Node*
-unserialize (FILE* fin) {
-    Node *root, *current;
-    root = current = NULL;
-    static char line[1024], buffer[1024];
-    int curdepth = 0, length = 0;
+/*Node**/
+/*unserialize (FILE* fin) {*/
+    /*Node *root, *current;*/
+    /*root = current = NULL;*/
+    /*static char buffer[BSIZE];*/
+    /*void* data = NULL;*/
+    /*int curdepth = 0, length = 0;*/
 
-    while (fgets (line, sizeof(line), fin) != NULL) {
-        sscanf (line, "%d:%d:%s", &curdepth, &length, buffer);
-        if (!root) {
-            root = create_tree (buffer, length);
-        }
-        else {
-            current = root;
-            while (--curdepth) {
-                if (!current) { 
-                    printf ("unserialize: bad depth %d\n", curdepth);
-                }
-                current = current->firstchild;
-            }
-            create_node_under (current, buffer, length);
-        }
-    }
+    /*while (sscanf (fin, "%d:%s", &curdepth, buffer)) {*/
+        /*// allocate*/
+        /*length = strlen (buffer) + 1;*/
+        /*data = (void *) malloc (length);*/
+        /*memcpy (data, buffer, length);*/
 
-    return root;
-}
+        /*// dispatch*/
+        /*if (!root) {*/
+            /*root = create_tree (data);*/
+        /*}*/
+        /*else {*/
+            /*current = root;*/
+            /*while (--curdepth) {*/
+                /*if (!current) { */
+                    /*printf ("unserialize: bad depth %d\n", curdepth);*/
+                    /*exit (1);*/
+                /*}*/
+                /*current = current->firstchild;*/
+            /*}*/
+            /*create_node_under (current, data);*/
+        /*}*/
+    /*}*/
+
+    /*return root;*/
+/*}*/
