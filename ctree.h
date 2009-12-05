@@ -48,13 +48,4 @@ Node* shallow_copy (Node* node);
 
 void memprint (void* data, unsigned int n, FILE* fout);
 
-/* serialize */
-void serialize (Node* node, FILE* fout, unsigned int n);
-void _serialize (Node* node, int depth, FILE* fout, unsigned int n);
-
-/* unserialize */
-/*
- *Node* unserialize (FILE* fin);
- */
-
 #endif /* __CTREE_H__ */
