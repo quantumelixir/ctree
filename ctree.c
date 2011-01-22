@@ -23,7 +23,8 @@ Node*
 create_tree (void* data) {
      Node* root = (Node *) malloc(sizeof(Node));
      root->data = data;
-     root->parent = root->prevsibling = root->nextsibling = root->firstchild = (Node *) NULL;
+     root->parent = root->firstchild = (Node *) NULL;
+     root->prevsibling = root->nextsibling = (Node *) NULL;
      return root;
 }
 
@@ -110,7 +111,8 @@ create_node_next_to (Node* node, void* data) {
  * Use traverse_node instead. Not this.
  */
 static void
-_traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+_traverse_node (Node* node, int depth,
+        void (*print_data)(void*, int, int, unsigned int*)) {
     Node *start, *next;
     start = next = node->firstchild;
     static unsigned int bitmask = 0;
@@ -154,7 +156,8 @@ _traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth,
  *          depth information is available only from 0-31
  */
 void
-traverse_node (Node* node, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+traverse_node (Node* node,
+        void (*print_data)(void*, int, int, unsigned int*)) {
     _traverse_node(node, 0, print_data);
 }
 
