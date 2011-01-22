@@ -32,8 +32,8 @@ Node* create_node_next_to (Node* node, void* data);
 void traverse_node (Node* node,
         void (*print_data)(void*, int, int, unsigned int*));
 
-/* remove node */
-int remove_node (Node* node);
+/* detach node */
+int detach_node (Node* node);
 
 /* delete node */
 int delete_node (Node* node);

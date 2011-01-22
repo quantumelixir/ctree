@@ -162,7 +162,7 @@ traverse_node (Node* node,
 }
 
 /*
- * remove (but don't delete) the node, preserving
+ * detach (but don't delete) the node, preserving
  * silbing and parent-child relationships
  *
  * NOTE: Assumes that node is not root
@@ -170,8 +170,8 @@ traverse_node (Node* node,
  * from a tree as root _is_ the tree
  */
 int
-remove_node (Node* node) {
-    // remove the node out of the list of
+detach_node (Node* node) {
+    // detach the node out of the list of
     // children of which the node is a part
     Node* prev = node->prevsibling;
     Node* next = node->nextsibling;
@@ -212,7 +212,7 @@ _delete_node (Node* node, int raw) {
     // larger recursive deletion)
     // raw is 0 only for the toplevel invocation of _delete_node
     if (!raw && node->parent) {
-        remove_node (node);
+        detach_node (node);
     }
 
     // first delete all children of the node
@@ -259,7 +259,7 @@ delete_node (Node* node) {
  */
 int
 move_node_next_to (Node* node, Node* targetsibling) {
-    return remove_node (node) && insert_node_next_to (node, targetsibling);
+    return detach_node (node) && insert_node_next_to (node, targetsibling);
 }
 
 /*
@@ -271,7 +271,7 @@ move_node_next_to (Node* node, Node* targetsibling) {
  */
 int
 move_node_under (Node* node, Node* targetparent) {
-    return remove_node (node) && insert_node_under (node, targetparent);
+    return detach_node (node) && insert_node_under (node, targetparent);
 }
 
 /*
