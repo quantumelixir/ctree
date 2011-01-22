@@ -109,9 +109,8 @@ create_node_next_to (Node* node, void* data) {
 /*
  * Use traverse_node instead. Not this.
  */
-void
-_traverse_node (Node* node, int depth,
-        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+static void
+_traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
     Node *start, *next;
     start = next = node->firstchild;
     static unsigned int bitmask = 0;
@@ -155,8 +154,7 @@ _traverse_node (Node* node, int depth,
  *          depth information is available only from 0-31
  */
 void
-traverse_node (Node* node,
-        void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
+traverse_node (Node* node, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask)) {
     _traverse_node(node, 0, print_data);
 }
 
@@ -199,7 +197,7 @@ remove_node (Node* node) {
 /*
  * Use delete_node. Not this.
  */
-int
+static int
 _delete_node (Node* node, int raw) {
 
     Node* start = node->firstchild;

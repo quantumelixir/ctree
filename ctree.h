@@ -29,7 +29,6 @@ Node* create_node_under (Node* node, void* data);
 Node* create_node_next_to (Node* node, void* data);
 
 /* traverse tree */
-void _traverse_node (Node* node, int depth, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask));
 void traverse_node (Node* node, void (*print_data)(void* data, int depth, int islastchild, unsigned int* bitmask));
 
 /* remove node */
@@ -37,7 +36,6 @@ int remove_node (Node* node);
 
 /* delete node */
 int delete_node (Node* node);
-int _delete_node (Node* node, int raw);
 
 /* move node */
 int move_node_next_to (Node* node, Node* targetsibling);
