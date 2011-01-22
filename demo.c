@@ -11,7 +11,7 @@
  * depth of an item is inferred from its relative
  * indentation to the previous item
  */
-Node*
+struct Node*
 create_tree_from_file (FILE* infile) {
     static char buffer[1024];
     char* str = NULL;
@@ -22,8 +22,8 @@ create_tree_from_file (FILE* infile) {
         exit(1);
     }
 
-    Node* root = create_tree ("/");
-    Node* prev = NULL;
+    struct Node* root = create_tree ("/");
+    struct Node* prev = NULL;
     int prevdepth = -1;
 
     while (fgets (buffer, sizeof(buffer), infile) != NULL) {
@@ -54,9 +54,9 @@ void
 print_string (void* data, int indent, int islastchild, unsigned int* bitmask) {
     int i;
 
-    // print the current node's data with appropriate indentation
+    /* print the current node's data with appropriate indentation */
     for (i = 1; i < indent; ++i) {
-        // use bitmasks to suppress printing unnecessary branches
+        /* use bitmasks to suppress printing unnecessary branches */
         if (!((*bitmask) & (1 << i))) {
             printf ("|   ");
         }
@@ -76,13 +76,13 @@ int
 main (int argc, char **argv) {
 
     FILE* fin = fopen("./test", "r");
-    Node* root = create_tree_from_file (fin);
+    struct Node* root = create_tree_from_file (fin);
     fclose (fin);
 
-    Node* chillu = root->firstchild->firstchild;
-    Node* sandbox = chillu->firstchild->prevsibling;
-    Node* foo = sandbox->prevsibling;
-    Node* copy = shallow_copy (chillu);
+    struct Node* chillu = root->firstchild->firstchild;
+    struct Node* sandbox = chillu->firstchild->prevsibling;
+    struct Node* foo = sandbox->prevsibling;
+    struct Node* copy = shallow_copy (chillu);
 
     printf ("\nInit\n");
     traverse_node (root, print_string);

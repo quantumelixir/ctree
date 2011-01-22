@@ -16,12 +16,12 @@
  * creates and returns pointer to an empty root node
  * root nodes cannot have siblings
  */
-Node*
+struct Node*
 create_tree (void* data) {
-     Node* root = (Node *) malloc(sizeof(Node));
+     struct Node* root = (struct Node *) malloc(sizeof(struct Node));
      root->data = data;
-     root->parent = root->firstchild = (Node *) NULL;
-     root->prevsibling = root->nextsibling = (Node *) NULL;
+     root->parent = root->firstchild = (struct Node *) NULL;
+     root->prevsibling = root->nextsibling = (struct Node *) NULL;
      return root;
 }
 
@@ -32,9 +32,9 @@ create_tree (void* data) {
  * the end.
  */
 int
-insert_node_under (Node* node, Node* targetparent) {
+insert_node_under (struct Node* node, struct Node* targetparent) {
 
-    Node* lastchild = (Node *) NULL;
+    struct Node* lastchild = (struct Node *) NULL;
 
     node->parent = targetparent;
 
@@ -57,13 +57,13 @@ insert_node_under (Node* node, Node* targetparent) {
 /*
  * creates and returns poiner to a child under a given node
  */
-Node*
-create_node_under (Node* node, void* data) {
+struct Node*
+create_node_under (struct Node* node, void* data) {
 
-    Node* newchild = (Node *) malloc(sizeof(Node));
+    struct Node* newchild = (struct Node *) malloc(sizeof(struct Node));
     newchild->data = data;
 
-    newchild->firstchild = (Node *) NULL;
+    newchild->firstchild = (struct Node *) NULL;
     insert_node_under (newchild, node);
 
     return newchild;
@@ -74,12 +74,12 @@ create_node_under (Node* node, void* data) {
  * as a sibling of the target.
  */
 int
-insert_node_next_to (Node* node, Node* targetsibling) {
+insert_node_next_to (struct Node* node, struct Node* targetsibling) {
 
-    Node* next = targetsibling->nextsibling;
+    struct Node* next = targetsibling->nextsibling;
     node->parent = targetsibling->parent;
 
-    // take care of sibling links
+    /* take care of sibling links */
     targetsibling->nextsibling = node;
     next->prevsibling = node;
     node->nextsibling = next;
@@ -92,13 +92,13 @@ insert_node_next_to (Node* node, Node* targetsibling) {
  * creates and inserts a sibling node next to a given node
  * returning pointer to the newly created sibling
  */
-Node*
-create_node_next_to (Node* node, void* data) {
+struct Node*
+create_node_next_to (struct Node* node, void* data) {
 
-    Node* newsibling = (Node *) malloc(sizeof(Node));
+    struct Node* newsibling = (struct Node *) malloc(sizeof(struct Node));
     newsibling->data = data;
 
-    newsibling->firstchild = (Node *) NULL;
+    newsibling->firstchild = (struct Node *) NULL;
     insert_node_next_to (newsibling, node);
 
     return newsibling;
@@ -108,29 +108,29 @@ create_node_next_to (Node* node, void* data) {
  * Use traverse_node instead. Not this.
  */
 static void
-_traverse_node (Node* node, int depth,
+_traverse_node (struct Node* node, int depth,
         void (*print_data)(void*, int, int, unsigned int*)) {
-    Node *start, *next;
+    struct Node *start, *next;
     start = next = node->firstchild;
     static unsigned int bitmask = 0;
     int islastchild = node->nextsibling == ((node->parent) ? node->parent->firstchild : NULL);
 
-    // If a new traversal reset bitmask
+    /* If a new traversal reset bitmask */
     if (!depth)
         bitmask = 0;
 
-    // call printing function
+    /* call printing function */
     print_data (node->data, depth, islastchild, &bitmask);
 
-    // update bitmask if lastchild is past
+    /* update bitmask if lastchild is past */
     if (islastchild) {
         bitmask ^= (1 << (depth));
     }
 
-    // if the node has a child
+    /* if the node has a child */
     if (start) {
         _traverse_node (next, depth + 1, print_data);
-        // recurse without going round in circles
+        /* recurse without going round in circles */
         while ((next = next->nextsibling) != start) {
             _traverse_node (next, depth + 1, print_data);
         }
@@ -153,7 +153,7 @@ _traverse_node (Node* node, int depth,
  *          depth information is available only from 0-31
  */
 void
-traverse_node (Node* node,
+traverse_node (struct Node* node,
         void (*print_data)(void*, int, int, unsigned int*)) {
     _traverse_node(node, 0, print_data);
 }
@@ -167,25 +167,25 @@ traverse_node (Node* node,
  * from a tree as root _is_ the tree
  */
 int
-detach_node (Node* node) {
-    // detach the node out of the list of
-    // children of which the node is a part
-    Node* prev = node->prevsibling;
-    Node* next = node->nextsibling;
+detach_node (struct Node* node) {
+    /* detach the node out of the list of
+       children of which the node is a part */
+    struct Node* prev = node->prevsibling;
+    struct Node* next = node->nextsibling;
     if (node != next) {
-        // has at least one other sibling
+        /* has at least one other sibling */
         prev->nextsibling = next;
         next->prevsibling = prev;
     }
 
-    // if the node is not root then you have to
-    // manage parent-child relationships
+    /* if the node is not root then you have to
+       manage parent-child relationships */
     if (node->parent) {
-        // the only child is about to be deleted
+        /* the only child is about to be deleted */
         if (node->nextsibling == node) {
-            node->parent->firstchild = (Node *) NULL;
+            node->parent->firstchild = (struct Node *) NULL;
         }
-        // the first child of the parent is about to be deleted
+        /* the first child of the parent is about to be deleted */
         else if (node->parent->firstchild == node) {
             node->parent->firstchild = node->nextsibling;
         }
@@ -198,27 +198,27 @@ detach_node (Node* node) {
  * Use delete_node. Not this.
  */
 static int
-_delete_node (Node* node, int raw) {
+_delete_node (struct Node* node, int raw) {
 
-    Node* start = node->firstchild;
-    Node* curr  = (Node *) NULL;
+    struct Node* start = node->firstchild;
+    struct Node* curr  = (struct Node *) NULL;
 
-    // if deletion is raw then don't bother maintaining
-    // the prev/next sibling relationships as these nodes
-    // will anyway be deleted later. (i.e. part of a
-    // larger recursive deletion)
-    // raw is 0 only for the toplevel invocation of _delete_node
+    /* if deletion is raw then don't bother maintaining
+       the prev/next sibling relationships as these nodes
+       will anyway be deleted later. (i.e. part of a
+       larger recursive deletion)
+       raw is 0 only for the toplevel invocation of _delete_node */
     if (!raw && node->parent) {
         detach_node (node);
     }
 
-    // first delete all children of the node
+    /* first delete all children of the node */
     if (start) {
-        // only one child
+        /* only one child */
         if (start == start->nextsibling) {
             _delete_node (start, 1);
         }
-        // more than one child
+        /* more than one child */
         else {
             curr = start->nextsibling;
             while (start != curr) {
@@ -229,7 +229,7 @@ _delete_node (Node* node, int raw) {
         }
     }
 
-    // delete the node itself
+    /* delete the node itself */
     free (node);
 
     return 1;
@@ -243,7 +243,7 @@ _delete_node (Node* node, int raw) {
  * TODO: Currently always returns 1 => Do error checking.
  */
 int
-delete_node (Node* node) {
+delete_node (struct Node* node) {
     return _delete_node(node, 0);
 }
 
@@ -255,7 +255,7 @@ delete_node (Node* node) {
  * the results are undefined)
  */
 int
-move_node_next_to (Node* node, Node* targetsibling) {
+move_node_next_to (struct Node* node, struct Node* targetsibling) {
     return detach_node (node) && insert_node_next_to (node, targetsibling);
 }
 
@@ -267,7 +267,7 @@ move_node_next_to (Node* node, Node* targetsibling) {
  * the results are undefined)
  */
 int
-move_node_under (Node* node, Node* targetparent) {
+move_node_under (struct Node* node, struct Node* targetparent) {
     return detach_node (node) && insert_node_under (node, targetparent);
 }
 
@@ -278,10 +278,10 @@ move_node_under (Node* node, Node* targetparent) {
  * NOTE: The new tree will still point to the same
  * set of pointers that the old tree pointed to
  */
-Node* shallow_copy (Node* node)
+struct Node* shallow_copy (struct Node* node)
 {
-    Node* root = (Node *) create_tree (node->data);
-    Node *start, *next;
+    struct Node* root = (struct Node *) create_tree (node->data);
+    struct Node *start, *next;
     start = next = node->firstchild;
 
     if (start) {

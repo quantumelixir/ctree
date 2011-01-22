@@ -4,45 +4,42 @@
 /* Buffer size */
 #define BSIZE 1024
 
-/* Node structure */
-typedef struct Node Node;
+/* struct Node structure */
 struct Node {
-    // data
     void* data;
 
-    // links
-    Node* parent;
-    Node* prevsibling;
-    Node* nextsibling;
-    Node* firstchild;
+    struct Node* parent;
+    struct Node* prevsibling;
+    struct Node* nextsibling;
+    struct Node* firstchild;
 };
 
 /* create tree */
-Node* create_tree (void* data);
+struct Node* create_tree (void* data);
 
 /* insert node */
-int insert_node_under (Node* node, Node* targetparent);
-int insert_node_next_to (Node* node, Node* targetsibling);
+int insert_node_under (struct Node* node, struct Node* targetparent);
+int insert_node_next_to (struct Node* node, struct Node* targetsibling);
 
 /* create node */
-Node* create_node_under (Node* node, void* data);
-Node* create_node_next_to (Node* node, void* data);
+struct Node* create_node_under (struct Node* node, void* data);
+struct Node* create_node_next_to (struct Node* node, void* data);
 
 /* traverse tree */
-void traverse_node (Node* node,
+void traverse_node (struct Node* node,
         void (*print_data)(void*, int, int, unsigned int*));
 
 /* detach node */
-int detach_node (Node* node);
+int detach_node (struct Node* node);
 
 /* delete node */
-int delete_node (Node* node);
+int delete_node (struct Node* node);
 
 /* move node */
-int move_node_next_to (Node* node, Node* targetsibling);
-int move_node_under (Node* node, Node* targetparent);
+int move_node_next_to (struct Node* node, struct Node* targetsibling);
+int move_node_under (struct Node* node, struct Node* targetparent);
 
 /* deep copy */
-Node* shallow_copy (Node* node);
+struct Node* shallow_copy (struct Node* node);
 
 #endif /* __CTREE_H__ */
