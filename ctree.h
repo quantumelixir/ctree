@@ -45,6 +45,4 @@ int move_node_under (Node* node, Node* targetparent);
 /* deep copy */
 Node* shallow_copy (Node* node);
 
-void memprint (void* data, unsigned int n, FILE* fout);
-
 #endif /* __CTREE_H__ */
