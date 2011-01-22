@@ -1,8 +1,20 @@
 ctree -- Generic n-ary tree (with doubly linked child nodes) in C
 
-Rationale: For storing hierarchial information providing (very!) fast
+rationale
+---------
+For storing hierarchial information providing (very!) fast
 inserts, deletes and moves. Plan to use it later in creating and
 manipulating todo lists
 
-TODO
+building
+--------
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+$ cp ../test .
+$ ./demo
+
+todo
+----
   * custom memory pool management to allocate in chunks (fewer calls to malloc and free)

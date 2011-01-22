@@ -75,7 +75,7 @@ print_string (void* data, int indent, int islastchild, unsigned int* bitmask) {
 int
 main (int argc, char **argv) {
 
-    FILE* fin = fopen("../test", "r");
+    FILE* fin = fopen("./test", "r");
     Node* root = create_tree_from_file (fin);
     fclose (fin);
 
