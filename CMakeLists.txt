@@ -2,9 +2,7 @@ project(ctree)
 
 cmake_minimum_required(VERSION 2.6)
 
-if(APPLE)
-    include_directories(/usr/include/malloc/)
-endif(APPLE)
+add_definitions("-Wall -ansi -O2")
 
 # libify
 add_library(ctree SHARED ctree.c)

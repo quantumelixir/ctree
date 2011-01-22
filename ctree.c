@@ -8,9 +8,6 @@
  * Time: 10:18:44 PM IST
  */
 
-#include <stdio.h>
-#include <malloc.h>
-#include <string.h>
 #include <stdlib.h>
 
 #include "ctree.h"
