@@ -1,11 +1,15 @@
-example : example.o ctree.o
-	gcc -Wall example.o ctree.o -lncurses -o example
+CC=cc
+CFLAGS=-Wall -Werror -O1
+INCLUDE=-I/usr/include/malloc/
 
-debug : example.c ctree.c ctree.h
-	gcc -g -Wall example.c ctree.c -lncurses -o debug
+demo : demo.c ctree.h libctree.dylib
+	$(CC) $(CFLAGS) -L. -lctree $< -o $@
 
-example.o : example.c
-	gcc -Wall -c example.c
+# works only on APPLE (use -shared for other sytems)
+libctree.dylib : ctree.c
+	$(CC) $(CFLAGS) $(INCLUDE) -dynamiclib -c $< -o $@
 
-ctree.o : ctree.c ctree.h
-	gcc -Wall -c ctree.c
+.PHONY: clean
+
+clean:
+	rm -rf libctree.dylib demo
