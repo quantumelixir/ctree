@@ -104,9 +104,6 @@ create_node_next_to (struct Node* node, void* data) {
     return newsibling;
 }
 
-/*
- * Use traverse_node instead. Not this.
- */
 static void
 _traverse_node (struct Node* node, int depth,
         void (*print_data)(void*, int, int, unsigned int*)) {
@@ -194,9 +191,6 @@ detach_node (struct Node* node) {
     return 1;
 }
 
-/*
- * Use delete_node. Not this.
- */
 static int
 _delete_node (struct Node* node, int raw) {
 
@@ -272,7 +266,7 @@ move_node_under (struct Node* node, struct Node* targetparent) {
 }
 
 /*
- * Returns a pointer to a new tree that is a
+ * returns a pointer to a new tree that is a
  * recursive copy of the sub-tree under node
  *
  * NOTE: The new tree will still point to the same
