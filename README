@@ -11,8 +11,12 @@ building
 $ mkdir build
 $ cd build
 $ cmake ..
+$ sudo make install
+
+demo
+----
+$ cd demo
 $ make
-$ cp ../test .
 $ ./demo
 
 todo

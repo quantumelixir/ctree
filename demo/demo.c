@@ -76,7 +76,7 @@ char*
 newstring(char* s) {
     char* t = (char *) malloc(sizeof(char) * (strlen(s) + 1));
     char* r = t;
-    while (*r++ = *s++);
+    while ((*r++ = *s++));
     return t;
 }
 
@@ -114,7 +114,7 @@ main (int argc, char **argv) {
     printf ("\nSearching for \"foo\"\n");
     traverse_node (search (root, "foo", strcmp), print_string);
 
-    deep_copy (root, newstring);
+    dcopy = deep_copy (root, newstring);
 
     delete_node (root);
 
