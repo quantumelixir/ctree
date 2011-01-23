@@ -326,10 +326,10 @@ search (struct Node* node, void* a, int (*compare)(void* a, void* b)) {
         return node;
 
     if (start) {
-        if (temp = search (start, a, compare))
+        if ((temp = search (start, a, compare)))
             return temp;
         while ((next = next->nextsibling) != start)
-            if (temp = search (next, a, compare))
+            if ((temp = search (next, a, compare)))
                 return temp;
     }
 
