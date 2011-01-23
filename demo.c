@@ -72,6 +72,14 @@ print_string (void* data, int indent, int islastchild, unsigned int* bitmask) {
     printf ("%s\n", (char *)data);
 }
 
+char*
+newstring(char* s) {
+    char* t = (char *) malloc(sizeof(char) * (strlen(s) + 1));
+    char* r = t;
+    while (*r++ = *s++);
+    return t;
+}
+
 int
 main (int argc, char **argv) {
 
@@ -82,7 +90,7 @@ main (int argc, char **argv) {
     struct Node* chillu = root->firstchild->firstchild;
     struct Node* sandbox = chillu->firstchild->prevsibling;
     struct Node* foo = sandbox->prevsibling;
-    struct Node* copy = shallow_copy (chillu);
+    struct Node* copy = shallow_copy (chillu), *dcopy;
 
     printf ("\nInit\n");
     traverse_node (root, print_string);
@@ -103,6 +111,14 @@ main (int argc, char **argv) {
     delete_node (chillu);
     traverse_node (root, print_string);
 
+    deep_copy (root, newstring);
+
     delete_node (root);
+
+    printf ("\nDeep copy\n");
+    traverse_node (dcopy, print_string);
+
+    delete_node (dcopy);
+
     return 0;
 }

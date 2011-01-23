@@ -39,7 +39,10 @@ int delete_node (struct Node* node);
 int move_node_next_to (struct Node* node, struct Node* targetsibling);
 int move_node_under (struct Node* node, struct Node* targetparent);
 
-/* deep copy */
+/* shallow copy */
 struct Node* shallow_copy (struct Node* node);
+
+/* deep copy */
+struct Node* deep_copy (struct Node* node, void* (*copyfunc)(void*));
 
 #endif /* __CTREE_H__ */

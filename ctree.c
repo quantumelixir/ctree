@@ -293,3 +293,25 @@ struct Node* shallow_copy (struct Node* node)
 
     return root;
 }
+
+/*
+ * returns a pointer to a new tree that is a
+ * recursive copy of the sub-tree under node
+ * with copyfunc allocating memory appropriately
+ */
+struct Node* deep_copy (struct Node* node, void* (*copyfunc)(void*)) {
+    struct Node* root = (struct Node *) create_tree (node->data);
+    root->data = copyfunc(root->data);
+
+    struct Node *start, *next;
+    start = next = node->firstchild;
+
+    if (start) {
+        insert_node_under (deep_copy (start, copyfunc), root);
+        while ((next = next->nextsibling) != start) {
+            insert_node_under (deep_copy (next, copyfunc), root);
+        }
+    }
+
+    return root;
+}
