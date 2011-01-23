@@ -111,6 +111,9 @@ main (int argc, char **argv) {
     delete_node (chillu);
     traverse_node (root, print_string);
 
+    printf ("\nSearching for \"foo\"\n");
+    traverse_node (search (root, "foo", strcmp), print_string);
+
     deep_copy (root, newstring);
 
     delete_node (root);

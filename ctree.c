@@ -309,3 +309,29 @@ struct Node* deep_copy (struct Node* node, void* (*copyfunc)(void*)) {
 
     return root;
 }
+
+/*
+ * traverse the tree and return the pointer to the first node for
+ * which the compare function returns 0; otherwise, return NULL
+ */
+struct Node*
+search (struct Node* node, void* a, int (*compare)(void* a, void* b)) {
+    struct Node *start, *next, *temp;
+    start = next = node->firstchild;
+
+    if (!node->data)
+        return NULL;
+
+    if (compare(a, node->data) == 0)
+        return node;
+
+    if (start) {
+        if (temp = search (start, a, compare))
+            return temp;
+        while ((next = next->nextsibling) != start)
+            if (temp = search (next, a, compare))
+                return temp;
+    }
+
+    return NULL;
+}
